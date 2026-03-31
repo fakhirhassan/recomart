@@ -1,0 +1,16 @@
+const express = require('express');
+const router = express.Router();
+const { auth } = require('../middleware/auth');
+const validate = require('../middleware/validate');
+const { userValidators } = require('../utils/validators');
+const userController = require('../controllers/userController');
+
+router.use(auth);
+
+router.put('/profile', userValidators.updateProfile, validate, userController.updateProfile);
+router.put('/password', userValidators.changePassword, validate, userController.changePassword);
+router.post('/address', userValidators.address, validate, userController.addAddress);
+router.put('/address/:addressId', userValidators.address, validate, userController.updateAddress);
+router.delete('/address/:addressId', userController.deleteAddress);
+
+module.exports = router;
