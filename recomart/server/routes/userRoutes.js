@@ -9,8 +9,12 @@ router.use(auth);
 
 router.put('/profile', userValidators.updateProfile, validate, userController.updateProfile);
 router.put('/password', userValidators.changePassword, validate, userController.changePassword);
+router.get('/addresses', userController.getAddresses);
 router.post('/address', userValidators.address, validate, userController.addAddress);
+router.post('/addresses', userValidators.address, validate, userController.addAddress);
 router.put('/address/:addressId', userValidators.address, validate, userController.updateAddress);
+router.put('/addresses/:addressId', userValidators.address, validate, userController.updateAddress);
 router.delete('/address/:addressId', userController.deleteAddress);
+router.delete('/addresses/:addressId', userController.deleteAddress);
 
 module.exports = router;

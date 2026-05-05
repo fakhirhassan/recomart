@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Camera, X } from 'lucide-react';
+import { Search, Camera, X, Loader2 } from 'lucide-react';
+import toast from 'react-hot-toast';
 import useDebounce from '../../hooks/useDebounce';
 import api from '../../api/axios';
 
@@ -9,6 +10,7 @@ const SearchBar = () => {
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isVisualSearching, setIsVisualSearching] = useState(false);
   const debouncedQuery = useDebounce(query, 300);
   const navigate = useNavigate();
   const wrapperRef = useRef(null);
@@ -67,18 +69,24 @@ const SearchBar = () => {
     const formData = new FormData();
     formData.append('image', file);
 
+    setIsVisualSearching(true);
+    const toastId = toast.loading('Analyzing image...');
     try {
       const { data } = await api.post('/search/image', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       if (data.query) {
+        toast.success(`Found: ${data.query}`, { id: toastId });
         navigate(`/search?q=${encodeURIComponent(data.query)}`);
-      } else if (data.results) {
-        navigate('/search?visual=true', { state: { results: data.results } });
+      } else {
+        toast.error('Could not identify a product in this image', { id: toastId });
       }
     } catch (err) {
+      const msg = err.response?.data?.message || 'Visual search failed';
+      toast.error(msg, { id: toastId });
       console.error('Visual search failed:', err);
     } finally {
+      setIsVisualSearching(false);
       e.target.value = '';
     }
   };
@@ -115,10 +123,15 @@ const SearchBar = () => {
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors"
+          disabled={isVisualSearching}
+          className="px-3 py-2 border border-l-0 border-gray-300 bg-gray-50 hover:bg-gray-100 transition-colors disabled:opacity-60"
           title="Search by image"
         >
-          <Camera className="h-4 w-4 text-gray-500" />
+          {isVisualSearching ? (
+            <Loader2 className="h-4 w-4 text-gray-500 animate-spin" />
+          ) : (
+            <Camera className="h-4 w-4 text-gray-500" />
+          )}
         </button>
         <button
           type="submit"

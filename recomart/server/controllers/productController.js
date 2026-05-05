@@ -217,10 +217,10 @@ const createProduct = async (req, res, next) => {
       tags: mergedTags,
       aiCategory,
       aiConfidence,
-      isApproved: false
+      isApproved: true
     });
 
-    return ApiResponse.created(res, { product }, 'Product created successfully. Awaiting admin approval.');
+    return ApiResponse.created(res, { product }, 'Product created successfully.');
   } catch (error) {
     next(error);
   }

@@ -8,11 +8,21 @@ const getCategories = async (req, res, next) => {
   try {
     const categories = await Category.find({ isActive: true }).lean();
 
+    const counts = await Product.aggregate([
+      { $match: { isApproved: true, isActive: true } },
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ]);
+    const directCount = {};
+    for (const row of counts) {
+      directCount[row._id.toString()] = row.count;
+    }
+
     const categoryMap = {};
     const roots = [];
 
     for (const cat of categories) {
       cat.children = [];
+      cat.productCount = directCount[cat._id.toString()] || 0;
       categoryMap[cat._id.toString()] = cat;
     }
 
@@ -26,6 +36,16 @@ const getCategories = async (req, res, next) => {
         roots.push(cat);
       }
     }
+
+    const rollUp = (node) => {
+      let total = node.productCount;
+      for (const child of node.children) {
+        total += rollUp(child);
+      }
+      node.productCount = total;
+      return total;
+    };
+    roots.forEach(rollUp);
 
     return ApiResponse.success(res, { categories: roots }, 'Categories retrieved successfully');
   } catch (error) {

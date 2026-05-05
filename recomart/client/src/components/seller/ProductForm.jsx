@@ -3,7 +3,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Plus, Trash2, Upload, Loader2, Sparkles, X } from 'lucide-react';
-import axios from 'axios';
+import api from '../../api/axios';
 
 const productSchema = z.object({
   title: z.string().min(3, 'Title must be at least 3 characters'),
@@ -65,8 +65,17 @@ const ProductForm = ({ initialData, onSubmit, isLoading }) => {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await axios.get('/categories');
-        setCategories(data.categories || data);
+        const { data } = await api.get('/categories');
+        const tree = data.categories || data || [];
+        const flat = [];
+        const walk = (nodes, depth) => {
+          for (const node of nodes) {
+            flat.push({ _id: node._id, name: node.name, depth });
+            if (node.children?.length) walk(node.children, depth + 1);
+          }
+        };
+        walk(Array.isArray(tree) ? tree : [], 0);
+        setCategories(flat);
       } catch (err) {
         console.error('Failed to fetch categories', err);
       }
@@ -203,8 +212,8 @@ const ProductForm = ({ initialData, onSubmit, isLoading }) => {
           <select {...register('category')} className={inputClass}>
             <option value="">Select a category</option>
             {categories.map((cat) => (
-              <option key={cat._id || cat.id} value={cat._id || cat.id}>
-                {cat.name}
+              <option key={cat._id} value={cat._id}>
+                {`${'  '.repeat(cat.depth)}${cat.depth > 0 ? '↳ ' : ''}${cat.name}`}
               </option>
             ))}
           </select>

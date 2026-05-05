@@ -61,7 +61,7 @@ const changePassword = async (req, res, next) => {
 
 const addAddress = async (req, res, next) => {
   try {
-    const { label, street, city, state, zipCode, country, isDefault } = req.body;
+    const { label, street, city, state, zipCode, country, phone, isDefault } = req.body;
 
     if (!label || !street || !city || !state || !zipCode) {
       throw ApiError.badRequest('Label, street, city, state, and zip code are required');
@@ -85,6 +85,7 @@ const addAddress = async (req, res, next) => {
       state,
       zipCode,
       country: country || 'Pakistan',
+      phone: phone || '',
       isDefault: isDefault || false
     });
 
@@ -94,7 +95,20 @@ const addAddress = async (req, res, next) => {
     delete updatedUser.passwordHash;
     delete updatedUser.refreshToken;
 
-    return ApiResponse.created(res, { addresses: updatedUser.addresses }, 'Address added successfully');
+    const newAddress = updatedUser.addresses[updatedUser.addresses.length - 1];
+    return ApiResponse.created(res, { address: newAddress, addresses: updatedUser.addresses }, 'Address added successfully');
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAddresses = async (req, res, next) => {
+  try {
+    const user = await User.findById(req.user._id).select('addresses');
+    if (!user) {
+      throw ApiError.notFound('User not found');
+    }
+    return ApiResponse.success(res, { addresses: user.addresses }, 'Addresses fetched successfully');
   } catch (error) {
     next(error);
   }
@@ -103,7 +117,7 @@ const addAddress = async (req, res, next) => {
 const updateAddress = async (req, res, next) => {
   try {
     const { addressId } = req.params;
-    const { label, street, city, state, zipCode, country, isDefault } = req.body;
+    const { label, street, city, state, zipCode, country, phone, isDefault } = req.body;
 
     const user = await User.findById(req.user._id);
     if (!user) {
@@ -127,6 +141,7 @@ const updateAddress = async (req, res, next) => {
     if (state !== undefined) address.state = state;
     if (zipCode !== undefined) address.zipCode = zipCode;
     if (country !== undefined) address.country = country;
+    if (phone !== undefined) address.phone = phone;
     if (isDefault !== undefined) address.isDefault = isDefault;
 
     await user.save();
@@ -135,7 +150,7 @@ const updateAddress = async (req, res, next) => {
     delete updatedUser.passwordHash;
     delete updatedUser.refreshToken;
 
-    return ApiResponse.success(res, { addresses: updatedUser.addresses }, 'Address updated successfully');
+    return ApiResponse.success(res, { address: updatedUser.addresses.id(addressId), addresses: updatedUser.addresses }, 'Address updated successfully');
   } catch (error) {
     next(error);
   }
@@ -171,6 +186,7 @@ const deleteAddress = async (req, res, next) => {
 module.exports = {
   updateProfile,
   changePassword,
+  getAddresses,
   addAddress,
   updateAddress,
   deleteAddress

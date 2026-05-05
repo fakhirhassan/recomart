@@ -96,7 +96,8 @@ const ProductDetailPage = () => {
     );
   }
 
-  const inStock = product.stock > 0;
+  const stock = product.stockQuantity ?? product.stock ?? 0;
+  const inStock = stock > 0;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -108,7 +109,7 @@ const ProductDetailPage = () => {
         {/* Right - Product info */}
         <div className="space-y-6">
           <div>
-            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{product.name}</h1>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">{product.title || product.name}</h1>
             <div className="flex items-center gap-3 mt-3">
               <div className="flex items-center gap-1">{renderStars(product.rating || 0)}</div>
               <span className="text-sm text-gray-500">
@@ -155,7 +156,7 @@ const ProductDetailPage = () => {
             {inStock ? (
               <>
                 <CheckCircle className="w-5 h-5 text-green-500" />
-                <span className="text-sm font-medium text-green-600">In Stock ({product.stock} available)</span>
+                <span className="text-sm font-medium text-green-600">In Stock ({stock} available)</span>
               </>
             ) : (
               <>
@@ -179,7 +180,7 @@ const ProductDetailPage = () => {
                   </button>
                   <span className="w-12 text-center text-sm font-medium">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(stock, quantity + 1))}
                     className="p-2 hover:bg-gray-100 rounded-r-lg"
                   >
                     <Plus className="w-4 h-4" />

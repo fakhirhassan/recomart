@@ -34,7 +34,7 @@ const HeroBanner = () => {
                 Shop Now
               </Link>
               <Link
-                to="/categories"
+                to="/products"
                 className="inline-flex items-center justify-center gap-2 border-2 border-white/50 text-white font-semibold px-8 py-3 rounded-lg hover:bg-white/10 transition-colors"
               >
                 Browse Categories
